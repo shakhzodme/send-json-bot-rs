@@ -1,5 +1,7 @@
+use std::io::Error;
+
 use teloxide::{
-    dispatching::{dialogue::GetChatId, DpHandlerDescription},
+    dispatching::{dialogue::GetChatId, UpdateHandler},
     prelude::*,
     types::ParseMode,
 };
@@ -22,23 +24,19 @@ async fn main() {
     pretty_env_logger::init();
 
     let bot = Bot::from_env();
-    let handler: dptree::Handler<
-        'static,
-        DependencyMap,
-        Result<(), std::io::Error>,
-        DpHandlerDescription,
-    > = dptree::entry().endpoint(|u: Update, bot: Bot| async move {
-        if let None = u.chat_id() {
-            return Ok(());
-        }
+    let handler: UpdateHandler<Error> =
+        dptree::entry().endpoint(|u: Update, bot: Bot| async move {
+            if let None = u.chat_id() {
+                return Ok(());
+            }
 
-        let _ = bot
-            .send_message(u.chat_id().unwrap(), prettify_message(&u))
-            .parse_mode(ParseMode::MarkdownV2)
-            .await;
+            let _ = bot
+                .send_message(u.chat_id().unwrap(), prettify_message(&u))
+                .parse_mode(ParseMode::MarkdownV2)
+                .await;
 
-        Ok(())
-    });
+            Ok(())
+        });
 
     teloxide::dispatching::Dispatcher::builder(bot.clone(), handler)
         .build()
