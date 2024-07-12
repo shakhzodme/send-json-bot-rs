@@ -26,14 +26,12 @@ async fn main() {
     let bot = Bot::from_env();
     let handler: UpdateHandler<Error> =
         dptree::entry().endpoint(|u: Update, bot: Bot| async move {
-            if let None = u.chat_id() {
-                return Ok(());
-            }
-
-            let _ = bot
-                .send_message(u.chat_id().unwrap(), prettify_message(&u))
+            if let Some(chat_id) = u.chat_id() {
+                let _ = bot
+                .send_message(chat_id, prettify_message(&u))
                 .parse_mode(ParseMode::MarkdownV2)
                 .await;
+            }
 
             Ok(())
         });
